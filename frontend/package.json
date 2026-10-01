@@ -11,12 +11,12 @@
     "test:ui": "node scripts/ui-smoke-test.mjs"
   },
   "dependencies": {
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0",
-    "react-router-dom": "^7.18.4"
-  },
-  "devDependencies": {
-    "@vitejs/plugin-react": "^6.1.1",
+    "@vitejs/plugin-react": "^4.7.0",
+    "axios": "^1.12.2",
+    "lucide-react": "^0.468.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-router-dom": "^7.9.3",
     "vite": "^8.3.2"
   },
   "author": "Om Bhatt"
