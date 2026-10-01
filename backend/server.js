@@ -28,32 +28,28 @@ const app = express();
 // ---------------------- Global middleware ----------------------
 app.use(
   cors({
-    origin: true, // dev friendly: the Vite dev server proxies requests anyway
+    origin: true,
     credentials: true,
   })
 );
-app.use(express.json({ limit: '1mb' })); // parse JSON bodies
+
+app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 if (process.env.NODE_ENV !== 'production') {
-  app.use(morgan('dev')); // request logger
+  app.use(morgan('dev'));
 }
 
-// ---------------------- Routes ----------------------
-app.get('/', (req, res) => {
-  res.json({
-    success: true,
-    message: 'StudyHub API is running 🎓',
-    version: '1.0.0',
-    docs: '/api/health',
-  });
-});
+// ---------------------- API Routes ----------------------
 
 app.get('/api/health', (req, res) => {
   res.json({
     success: true,
     status: 'ok',
-    database: require('mongoose').connection.readyState === 1 ? 'connected' : 'disconnected',
+    database:
+      require('mongoose').connection.readyState === 1
+        ? 'connected'
+        : 'disconnected',
     time: new Date().toISOString(),
   });
 });
@@ -68,14 +64,57 @@ app.use('/api/announcements', announcementRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/stats', statsRoutes);
 
+// ---------------------- Serve React Frontend ----------------------
+
+// In production, frontend/dist is created by the Render build command
+if (process.env.NODE_ENV === 'production') {
+  const frontendPath = path.join(__dirname, '../frontend/dist');
+
+  app.use(express.static(frontendPath));
+
+  // React SPA fallback
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api/')) {
+      return next();
+    }
+
+    res.sendFile(path.join(frontendPath, 'index.html'));
+  });
+}
+
+// ---------------------- API Root ----------------------
+
+app.get('/', (req, res, next) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.sendFile(
+      path.join(__dirname, '../frontend/dist/index.html')
+    );
+  }
+
+  res.json({
+    success: true,
+    message: 'StudyHub API is running 🎓',
+    version: '1.0.0',
+    docs: '/api/health',
+  });
+});
+
 // ---------------------- Error handling ----------------------
+
 app.use(notFound);
 app.use(errorHandler);
 
+// ---------------------- Server ----------------------
+
 const PORT = process.env.PORT || 5000;
+
 app.listen(PORT, () => {
-  console.log(`\n🎓 StudyHub API listening on http://localhost:${PORT}`);
-  console.log(`   Environment: ${process.env.NODE_ENV || 'development'}\n`);
+  console.log(
+    `\n🎓 StudyHub API listening on port ${PORT}`
+  );
+  console.log(
+    `   Environment: ${process.env.NODE_ENV || 'development'}\n`
+  );
 });
 
 module.exports = app;
